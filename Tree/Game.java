@@ -16,17 +16,29 @@ public class Game {
 		}
 		return false;
 	}
+	
+	void AImove(Node nextNode, int marker) {
+		int[][] nextMove = nextNode.matrix;
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+				if (nextMove[x][y] != field[x][y]) {
+					field[x][y] = marker;
+					victory = winCondition(field);
+				}
+			}
+		}
+	}
 
 	@Override
 	public String toString() {
-		String form = "{";
+		String form = "";
 		for (int x = 0; x <= 2; x++) {
 			for (int y = 0; y <= 2; y++) {
 				form += "[" + field[x][y] + "]"; 
 			}
-			form += ",";
+			form += "\n";
 		}
-		form += "}";
+		form += "\n";
 		return form;
 	}
 

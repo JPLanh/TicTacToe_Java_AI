@@ -1,8 +1,11 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Graph {
 	ArrayList<Node> nodeList = new ArrayList<Node>();
-	
+
 	public Node addNode(int[][] matrixGet) {
 		Node tempNode = new Node(nodeList.size(), matrixGet);
 		if (!nodeList.contains(tempNode)) {
@@ -15,7 +18,7 @@ public class Graph {
 		}
 		return null;
 	}
-	
+
 	public void addNeighbor(Node node1, Node node2) {
 		Node firstNode = null, secondNode = null;
 		for (Node x : nodeList) {
@@ -25,7 +28,10 @@ public class Graph {
 			if (x.equals(node2)) {
 				secondNode = x;				
 			}
-			if (firstNode != null && secondNode != null) firstNode.neighbor.add(secondNode);
+			if (firstNode != null && secondNode != null) 
+				if (!firstNode.neighbor.contains(secondNode)) {
+					firstNode.neighbor.add(secondNode);
+				}
 		}
 	}
 	public void addNeighbor(int[][] matrixGet1, int[][] matrixGet2) {
@@ -35,46 +41,76 @@ public class Graph {
 		} else {
 			for (Node x : nodeList) {
 				if (x.compareTo(new Node(matrixGet1)) == 1) {
-					if (!x.neighbor.contains(tempNode))
+					if (!x.neighbor.contains(tempNode)) {
 						x.neighbor.add(tempNode);
+						break;
+					}
 				}
 			}
 		}
 	}
 
-	public ArrayList<Stack<Node>> DFS() {
-		Stack<Node> layers = new Stack<Node>();
-		Set<Node> visited = new HashSet<Node>();
-		ArrayList<Stack<Node>> possible = new ArrayList<Stack<Node>>();
-		layers.push(nodeList.get(0));
-		int travel = 0, shortest = 10;
-		while (!layers.isEmpty()) {
-			Node currentNode = layers.peek();
-			visited.add(currentNode);
-			if (currentNode.neighbor.size() > 0) {
-				for (Node n : currentNode.neighbor) {
-					if (!visited.contains(n)) {
-						layers.push(n);
-						travel++;
-						break;
+	public Node DFSAlpha(){
+		Stack<Node> toTravel = new Stack<Node>();
+		Stack<Node> layer = new Stack<Node>();
+		ArrayList<Stack<Node>> possability = new ArrayList<Stack<Node>>();
+		layer.push(nodeList.get(0));
+		for (Node n : nodeList.get(0).neighbor) {
+			toTravel.push(n);
+		}
+		while (!toTravel.isEmpty()) {
+			Node currentNode = toTravel.peek();
+			if (layer.peek().neighbor.contains(currentNode)) {
+				toTravel.pop();
+				//If the parent contains the child nodes
+				layer.add(currentNode);
+				if (currentNode.neighbor.size() > 0) {
+					//If the node is not a leaf
+					for (Node n : currentNode.neighbor) {
+						toTravel.push(n);
 					}
-					travel--;
-					layers.pop();
+				} else {
+					//If the node is a leaf
+					possability.add((Stack<Node>) layer.clone());
+					layer.pop();
 				}
+			} else {
+				layer.pop();
 			}
-			else {
-				if (shortest > travel) {
-					shortest = travel;
-					possible = new ArrayList<Stack<Node>>();
-					possible.add((Stack<Node>) layers.clone());
-				} else if (shortest == travel){
-					possible.add((Stack<Node>) layers.clone());
-				}
-				layers.pop();
-				travel--;
+		}		
+		return bestChoice(DFShelper(possability));
+	}
+
+	public HashMap<Node, Integer> DFShelper(ArrayList<Stack<Node>> getList) {
+		HashMap<Node, Integer> count = new HashMap<Node, Integer>();
+		for (Stack<Node> x : getList) {
+			if (count.containsKey(x.elementAt(1))) count.put(x.elementAt(1), count.get(x.elementAt(1))+1);
+			else count.put(x.elementAt(1), 1);
+		}
+		BufferedWriter os;
+		try {
+			os = new BufferedWriter(new FileWriter("Test.txt"));
+			String writer = count.toString();
+			os.write(writer);
+			os.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return count;
+	}
+	
+	public Node bestChoice(HashMap<Node, Integer> getMap) {
+		//Ugly algorithm
+		int highest = 0;
+		Node selectedNode = null;
+		for (Node n : getMap.keySet()) {
+			if (n.winCon == 2) return n;
+			if (getMap.get(n) > highest) {
+				selectedNode = n;
+				highest = getMap.get(n);
 			}
 		}
-		return possible;
+		return selectedNode;
 	}
 }
 
@@ -84,7 +120,7 @@ class Node implements Comparable<Node>{
 	int xSize = 2, ySize = 2;
 	List<Node> neighbor = new ArrayList<Node>();
 	int winCon = 0;
-	
+
 	Node(){
 		matrix = new int[xSize][ySize];
 	}
@@ -97,7 +133,7 @@ class Node implements Comparable<Node>{
 	Node(Node matrixGet) {
 		matrix = matrixGet.matrix;
 	}
-	
+
 	Node(int getID, int[][] matrixGet) {
 		ID = getID;
 		matrix = matrixGet;
@@ -109,11 +145,11 @@ class Node implements Comparable<Node>{
 		if (Arrays.deepEquals(this.matrix, n0.matrix)) return 1;
 		else return 0;
 	}
-	
-	
+
+
 	@Override
 	public int hashCode() {
-        return 29 + ID;
+		return 29 + ID;
 	}
 
 	@Override
@@ -121,20 +157,20 @@ class Node implements Comparable<Node>{
 		if (Arrays.deepEquals(this.matrix, ((Node)o).matrix)) return true;
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
-		String form = "{";
-			for (int x = 0; x <= xSize; x++) {
-				for (int y = 0; y <= ySize; y++) {
-					form += "[" + matrix[x][y] + "]"; 
-				}
-				form += ",";
+		String form = "\n{";
+		for (int x = 0; x <= xSize; x++) {
+			for (int y = 0; y <= ySize; y++) {
+				form += "[" + matrix[x][y] + "]"; 
 			}
-			form += "}";
-			return form;
+			if (x!= xSize) form += ",";
+		}
+		form += "}";
+		return form;
 	}
-	
+
 	public static int winCondition(int[][] getMatrix) {
 		for (int j = 1; j < 3; j++) {
 			for (int i = 0; i < 3; i++){
