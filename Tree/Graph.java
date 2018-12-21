@@ -63,16 +63,21 @@ public class Graph {
 			if (layer.peek().neighbor.contains(currentNode)) {
 				toTravel.pop();
 				//If the parent contains the child nodes
-				layer.add(currentNode);
 				if (currentNode.neighbor.size() > 0) {
+					layer.add(currentNode);
 					//If the node is not a leaf
 					for (Node n : currentNode.neighbor) {
 						toTravel.push(n);
 					}
 				} else {
 					//If the node is a leaf
+					if (currentNode.depth%2==0) layer.peek().depth = Math.max(layer.peek().winCon, currentNode.winCon);
+					else layer.peek().depth = Math.min(layer.peek().winCon, currentNode.winCon);
+					layer.add(currentNode); 
 					possability.add((Stack<Node>) layer.clone());
 					layer.pop();
+					if (currentNode.winCon == 2) layer.peek().weight++;
+					else if (currentNode.winCon == 1) layer.peek().weight--;
 				}
 			} else {
 				layer.pop();
@@ -104,7 +109,9 @@ public class Graph {
 		int highest = 0;
 		Node selectedNode = null;
 		for (Node n : getMap.keySet()) {
-			if (n.winCon == 2) return n;
+			System.out.println(n + " : " + n.weight);
+			if (n.winCon == 1) return n;
+			else if (n.winCon == 2) return n;
 			if (getMap.get(n) > highest) {
 				selectedNode = n;
 				highest = getMap.get(n);
@@ -112,14 +119,17 @@ public class Graph {
 		}
 		return selectedNode;
 	}
+	
 }
 
 class Node implements Comparable<Node>{
 	int ID = 1;
 	int[][] matrix;
+	int depth;
 	int xSize = 2, ySize = 2;
 	List<Node> neighbor = new ArrayList<Node>();
 	int winCon = 0;
+	int weight = 0;
 
 	Node(){
 		matrix = new int[xSize][ySize];
@@ -132,6 +142,7 @@ class Node implements Comparable<Node>{
 
 	Node(Node matrixGet) {
 		matrix = matrixGet.matrix;
+		winCon = winCondition(matrixGet.matrix);
 	}
 
 	Node(int getID, int[][] matrixGet) {

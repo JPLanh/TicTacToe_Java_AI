@@ -2,7 +2,8 @@
 public class Game {
 	int[][] field = new int[][]{{0,0,0},{0,0,0},{0,0,0}};
 	int victory = 0;
-
+	int moves = 0;
+	
 	Game(){
 	}
 
@@ -15,6 +16,10 @@ public class Game {
 			}
 		}
 		return false;
+	}
+
+	public void increaseMove() {
+		moves++;
 	}
 	
 	void AImove(Node nextNode, int marker) {
